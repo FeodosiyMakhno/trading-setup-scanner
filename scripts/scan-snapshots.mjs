@@ -9,6 +9,7 @@ const setups = scanSnapshotRecords(records, {
 });
 
 console.log(`Snapshots read: ${records.length}`);
+console.log(`Mode: ${CONFIG.scanMode}`);
 console.log(`Lookback: ${CONFIG.scanLookbackMinutes} minutes`);
 console.log(`Setup candidates found: ${setups.length}`);
 console.log("");
