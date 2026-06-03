@@ -14,44 +14,96 @@ Initial patterns:
 - **Silent OI build**: OI grows quickly while price barely moves.
 - **Price without OI**: price pumps while OI does not confirm the move.
 
-## Free Data Test
+## Free Data Prototype
 
-The first prototype uses public data only:
+The prototype uses public data only:
 
-- Bybit public futures market data for USDT perpetual tickers, OI, funding, and candles.
+- Bybit public futures market data for USDT perpetual tickers, OI, funding, and price.
 - CoinGecko public market data for market cap, FDV, price, and volume.
 
-This is intentionally a data feasibility test before building the full Telegram bot.
+No API keys are required for the first scripts.
 
 ## Requirements
 
 - Node.js 20+
+- Git, only if you want to clone and update the repo locally.
 
-No API keys are required for the first check script.
-
-## Run
+## Install
 
 ```bash
+git clone https://github.com/FeodosiyMakhno/trading-setup-scanner.git
+cd trading-setup-scanner
 npm install
+```
+
+There are currently no external npm dependencies. `npm install` just prepares the local project normally.
+
+## Commands
+
+### One-time data feasibility check
+
+```bash
 npm run check
 ```
 
-The script prints:
+This prints the current Bybit/CoinGecko data match, top OI/MC candidates, and direct 1h enrichment for the top candidates.
 
-- number of Bybit USDT perpetual tickers found;
-- number of CoinGecko symbols indexed;
-- top OI/MC candidates under the configured market cap;
-- basic 1h OI/price enrichment for top candidates;
-- MVP signal candidates if current market conditions match the first rules.
+### Collect a market snapshot
 
-## Planned MVP Modules
+```bash
+npm run collect
+```
 
-- `collectors`: Bybit and CoinGecko data collection.
-- `scanner`: setup rules and duplicate protection.
-- `storage`: market snapshots and setup history.
-- `bot`: Telegram interface.
-- `tracker`: TP/SL tracking for manually accepted setups.
-- `stats`: winrate, RR, and expectancy.
+This writes the current candidate market state to:
+
+```text
+data/market-snapshots.jsonl
+```
+
+The file is ignored by git because it is local runtime data.
+
+### Scan collected snapshots
+
+```bash
+npm run scan
+```
+
+This reads local snapshots and searches for MVP setup candidates using the configured lookback window.
+
+For meaningful 1h signals, collect snapshots over time, for example every 5 minutes, then run `npm run scan`.
+
+## Useful Environment Options
+
+```bash
+SCAN_MARKET_CAP_MAX=500000000
+SCAN_VOLUME_24H_MIN=1000000
+SCAN_CANDIDATE_LIMIT=100
+SCAN_LOOKBACK_MINUTES=60
+SNAPSHOTS_FILE=data/market-snapshots.jsonl
+```
+
+On Windows PowerShell, set a variable like this before running a command:
+
+```powershell
+$env:SCAN_CANDIDATE_LIMIT="50"
+npm run collect
+```
+
+## Current MVP Modules
+
+- `src/providers`: Bybit and CoinGecko data providers.
+- `src/market`: candidate matching and OI/MC ranking.
+- `src/storage`: local JSONL snapshot storage.
+- `src/scanner`: setup rules.
+- `scripts`: runnable prototype commands.
+
+## Planned Next Steps
+
+- Add scheduled collection loop.
+- Add duplicate protection for repeated setup candidates.
+- Add Telegram bot interface.
+- Add manual setup tracking: direction, entry, SL, TP, RR.
+- Add winrate, RR, and expectancy stats.
 
 ## Safety
 
