@@ -72,6 +72,20 @@ This reads local snapshots and searches for MVP setup candidates using the confi
 
 For meaningful 1h signals, collect snapshots over time, for example every 5 minutes, then run `npm run scan`.
 
+### Generate visual HTML report
+
+```bash
+npm run report
+```
+
+This creates:
+
+```text
+reports/latest-report.html
+```
+
+Open this file in a browser to see summary cards, setup candidates, and a visual top OI/MC table.
+
 ### Collect automatically
 
 ```bash
