@@ -118,6 +118,14 @@ $env:COLLECT_INTERVAL_MINUTES="0"
 npm run collect:loop
 ```
 
+For a one-hour test-mode run with an HTML report after every collection:
+
+```powershell
+$env:SCAN_MODE="test"
+$env:COLLECT_GENERATE_REPORT="1"
+npm run collect:loop
+```
+
 For continuous mode:
 
 ```powershell
@@ -140,6 +148,7 @@ COINGECKO_CACHE_FILE=data/coingecko-markets-cache.json
 COINGECKO_CACHE_TTL_MINUTES=60
 COLLECT_INTERVAL_MINUTES=5
 COLLECT_RUNS=12
+COLLECT_GENERATE_REPORT=0
 ```
 
 On Windows PowerShell, set a variable like this before running a command:
