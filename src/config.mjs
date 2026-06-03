@@ -6,6 +6,8 @@ export const CONFIG = {
   candidateLimit: Number(process.env.SCAN_CANDIDATE_LIMIT ?? 100),
   requestTimeoutMs: Number(process.env.REQUEST_TIMEOUT_MS ?? 12_000),
   coingeckoPages: Number(process.env.COINGECKO_PAGES ?? 4),
+  coingeckoCacheFile: resolve(process.env.COINGECKO_CACHE_FILE ?? "data/coingecko-markets-cache.json"),
+  coingeckoCacheTtlMinutes: Number(process.env.COINGECKO_CACHE_TTL_MINUTES ?? 60),
   snapshotsFile: resolve(process.env.SNAPSHOTS_FILE ?? "data/market-snapshots.jsonl"),
   scanLookbackMinutes: Number(process.env.SCAN_LOOKBACK_MINUTES ?? 60),
 };
