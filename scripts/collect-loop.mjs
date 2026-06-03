@@ -2,6 +2,9 @@ import { spawn } from "node:child_process";
 
 const intervalMinutes = Number(process.env.COLLECT_INTERVAL_MINUTES ?? 5);
 const maxRuns = Number(process.env.COLLECT_RUNS ?? 12);
+const shouldGenerateReport = ["1", "true", "yes"].includes(
+  String(process.env.COLLECT_GENERATE_REPORT ?? "0").toLowerCase(),
+);
 
 if (!Number.isFinite(intervalMinutes) || intervalMinutes < 0) {
   throw new Error("COLLECT_INTERVAL_MINUTES must be a non-negative number.");
@@ -39,6 +42,8 @@ let runNumber = 0;
 console.log("Starting market snapshot collection loop.");
 console.log(`Interval: ${intervalMinutes} minute(s)`);
 console.log(`Runs: ${maxRuns === 0 ? "infinite" : maxRuns}`);
+console.log(`Mode: ${process.env.SCAN_MODE ?? "strict"}`);
+console.log(`Generate report: ${shouldGenerateReport ? "yes" : "no"}`);
 console.log("");
 
 while (maxRuns === 0 || runNumber < maxRuns) {
@@ -49,6 +54,12 @@ while (maxRuns === 0 || runNumber < maxRuns) {
   console.log("=== Scan after collection ===");
   await runNodeScript("scripts/scan-snapshots.mjs");
   console.log("");
+
+  if (shouldGenerateReport) {
+    console.log("=== Report after collection ===");
+    await runNodeScript("scripts/generate-report.mjs");
+    console.log("");
+  }
 
   if (maxRuns !== 0 && runNumber >= maxRuns) {
     break;
