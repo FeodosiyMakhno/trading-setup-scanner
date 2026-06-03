@@ -3,11 +3,19 @@ import { usd, pct } from "../src/format.mjs";
 import { buildCandidates } from "../src/market/candidates.mjs";
 import { getBybitLinearTickers } from "../src/providers/bybit.mjs";
 import { getCoinGeckoMarketsBySymbol } from "../src/providers/coingecko.mjs";
-import { appendJsonLines } from "../src/storage/jsonl.mjs";
+import { appendJsonLines, readJsonLines } from "../src/storage/jsonl.mjs";
 
 const timestamp = new Date().toISOString();
 const bybitTickers = await getBybitLinearTickers();
-const coinGeckoBySymbol = await getCoinGeckoMarketsBySymbol();
+const coinGeckoBySymbol = await getCoinGeckoMarketsBySymbol()
+  .catch(async (error) => {
+    const fallback = await buildCoinGeckoFallbackFromSnapshots();
+    if (fallback.size > 0) {
+      console.warn(`Using CoinGecko fallback from local snapshots after fetch failure: ${error.message.split("\n")[0]}`);
+      return fallback;
+    }
+    throw error;
+  });
 const candidates = buildCandidates(bybitTickers, coinGeckoBySymbol);
 
 const snapshots = candidates.map((item) => ({
@@ -49,4 +57,24 @@ for (const [index, item] of snapshots.slice(0, 15).entries()) {
       `24h ${pct(item.priceChange24h).padStart(8)} | ` +
       `Funding ${pct(item.fundingRate).padStart(8)}`
   );
+}
+
+async function buildCoinGeckoFallbackFromSnapshots() {
+  const records = await readJsonLines(CONFIG.snapshotsFile);
+  const bySymbol = new Map();
+
+  for (const record of records) {
+    const symbol = record.symbol?.toUpperCase();
+    if (!symbol || !record.coingeckoId) continue;
+
+    bySymbol.set(symbol, {
+      id: record.coingeckoId,
+      symbol,
+      name: record.name ?? symbol,
+      market_cap: record.marketCap,
+      fully_diluted_valuation: record.fdv,
+    });
+  }
+
+  return bySymbol;
 }
