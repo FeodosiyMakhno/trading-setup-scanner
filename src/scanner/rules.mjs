@@ -1,3 +1,5 @@
+import { CONFIG } from "../config.mjs";
+
 function percentChange(current, previous) {
   if (!Number.isFinite(current) || !Number.isFinite(previous) || previous <= 0) return null;
   return ((current - previous) / previous) * 100;
@@ -25,14 +27,28 @@ function findPreviousSnapshot(group, latest, lookbackMinutes) {
 }
 
 export function getSignalLabels(item) {
+  const thresholds = CONFIG.thresholds;
   const labels = [];
-  if (item.oiMc >= 1) labels.push("OI>MC");
-  if (item.oiChangePct >= 50 && item.priceChangePct >= -5 && item.priceChangePct <= 10) {
+
+  if (item.oiMc >= thresholds.oiMcMin) {
+    labels.push(thresholds.oiMcMin >= 1 ? "OI>MC" : "OI/MC watch");
+  }
+
+  if (
+    item.oiChangePct >= thresholds.silentOiBuildMinOiChangePct &&
+    item.priceChangePct >= thresholds.silentOiBuildMinPriceChangePct &&
+    item.priceChangePct <= thresholds.silentOiBuildMaxPriceChangePct
+  ) {
     labels.push("Silent OI build");
   }
-  if (item.priceChangePct >= 20 && Math.abs(item.oiChangePct ?? Infinity) <= 5) {
+
+  if (
+    item.priceChangePct >= thresholds.priceWithoutOiMinPriceChangePct &&
+    Math.abs(item.oiChangePct ?? Infinity) <= thresholds.priceWithoutOiMaxAbsOiChangePct
+  ) {
     labels.push("Price without OI");
   }
+
   return labels;
 }
 
@@ -43,14 +59,13 @@ export function scanSnapshotRecords(records, { lookbackMinutes = 60 } = {}) {
   for (const group of groups.values()) {
     const latest = group.at(-1);
     const previous = findPreviousSnapshot(group, latest, lookbackMinutes);
-    if (!previous) continue;
 
     const candidate = {
       ...latest,
       lookbackMinutes,
-      priceChangePct: percentChange(latest.price, previous.price),
-      oiChangePct: percentChange(latest.openInterest, previous.openInterest),
-      volume24hChangePct: percentChange(latest.volume24h, previous.volume24h),
+      priceChangePct: previous ? percentChange(latest.price, previous.price) : null,
+      oiChangePct: previous ? percentChange(latest.openInterest, previous.openInterest) : null,
+      volume24hChangePct: previous ? percentChange(latest.volume24h, previous.volume24h) : null,
     };
     candidate.labels = getSignalLabels(candidate);
 
