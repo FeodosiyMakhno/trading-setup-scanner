@@ -72,6 +72,31 @@ This reads local snapshots and searches for MVP setup candidates using the confi
 
 For meaningful 1h signals, collect snapshots over time, for example every 5 minutes, then run `npm run scan`.
 
+### Collect automatically
+
+```bash
+npm run collect:loop
+```
+
+By default this runs 12 collections with a 5-minute interval, about 1 hour total. After every collection it runs `npm run scan`.
+
+For a short test on Windows PowerShell:
+
+```powershell
+$env:COLLECT_RUNS="1"
+$env:COLLECT_INTERVAL_MINUTES="0"
+npm run collect:loop
+```
+
+For continuous mode:
+
+```powershell
+$env:COLLECT_RUNS="0"
+npm run collect:loop
+```
+
+Use continuous mode only when you are ready to leave the process running.
+
 ## Useful Environment Options
 
 ```bash
@@ -80,6 +105,8 @@ SCAN_VOLUME_24H_MIN=1000000
 SCAN_CANDIDATE_LIMIT=100
 SCAN_LOOKBACK_MINUTES=60
 SNAPSHOTS_FILE=data/market-snapshots.jsonl
+COLLECT_INTERVAL_MINUTES=5
+COLLECT_RUNS=12
 ```
 
 On Windows PowerShell, set a variable like this before running a command:
@@ -99,7 +126,6 @@ npm run collect
 
 ## Planned Next Steps
 
-- Add scheduled collection loop.
 - Add duplicate protection for repeated setup candidates.
 - Add Telegram bot interface.
 - Add manual setup tracking: direction, entry, SL, TP, RR.
