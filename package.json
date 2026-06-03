@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Trading setup scanner prototype based on OI, market cap, funding, price, and volume.",
   "scripts": {
-    "check": "node scripts/check-market-data.mjs"
+    "check": "node scripts/check-market-data.mjs",
+    "collect": "node scripts/collect-snapshot.mjs",
+    "scan": "node scripts/scan-snapshots.mjs"
   },
   "engines": {
     "node": ">=20"
