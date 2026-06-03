@@ -68,9 +68,19 @@ The file is ignored by git because it is local runtime data.
 npm run scan
 ```
 
-This reads local snapshots and searches for MVP setup candidates using the configured lookback window.
+This reads local snapshots and searches for MVP setup candidates using strict thresholds.
 
 For meaningful 1h signals, collect snapshots over time, for example every 5 minutes, then run `npm run scan`.
+
+### Test mode scan
+
+```bash
+npm run scan:test
+```
+
+Test mode uses softer thresholds so early reports are not empty while we tune the scanner. It is for observation, not final signal quality.
+
+Current test mode includes `OI/MC watch` when OI/MC is at least `0.25`.
 
 ### Generate visual HTML report
 
@@ -85,6 +95,12 @@ reports/latest-report.html
 ```
 
 Open this file in a browser to see summary cards, setup candidates, and a visual top OI/MC table.
+
+For softer test-mode report:
+
+```bash
+npm run report:test
+```
 
 ### Collect automatically
 
@@ -117,8 +133,11 @@ Use continuous mode only when you are ready to leave the process running.
 SCAN_MARKET_CAP_MAX=500000000
 SCAN_VOLUME_24H_MIN=1000000
 SCAN_CANDIDATE_LIMIT=100
+SCAN_MODE=strict
 SCAN_LOOKBACK_MINUTES=60
 SNAPSHOTS_FILE=data/market-snapshots.jsonl
+COINGECKO_CACHE_FILE=data/coingecko-markets-cache.json
+COINGECKO_CACHE_TTL_MINUTES=60
 COLLECT_INTERVAL_MINUTES=5
 COLLECT_RUNS=12
 ```
