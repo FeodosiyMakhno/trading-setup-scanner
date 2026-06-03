@@ -8,6 +8,7 @@
     "check": "node scripts/check-market-data.mjs",
     "collect": "node scripts/collect-snapshot.mjs",
     "collect:loop": "node scripts/collect-loop.mjs",
+    "report": "node scripts/generate-report.mjs",
     "scan": "node scripts/scan-snapshots.mjs"
   },
   "engines": {
