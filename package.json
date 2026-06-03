@@ -9,7 +9,9 @@
     "collect": "node scripts/collect-snapshot.mjs",
     "collect:loop": "node scripts/collect-loop.mjs",
     "report": "node scripts/generate-report.mjs",
-    "scan": "node scripts/scan-snapshots.mjs"
+    "report:test": "node scripts/generate-report.mjs --mode=test",
+    "scan": "node scripts/scan-snapshots.mjs",
+    "scan:test": "node scripts/scan-snapshots.mjs --mode=test"
   },
   "engines": {
     "node": ">=20"
