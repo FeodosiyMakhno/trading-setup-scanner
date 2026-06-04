@@ -26,6 +26,19 @@ function findPreviousSnapshot(group, latest, lookbackMinutes) {
   return candidates.at(-1) ?? null;
 }
 
+function findAnyPreviousSnapshot(group, latest) {
+  const latestTime = new Date(latest.timestamp).getTime();
+  const candidates = group.filter((item) => new Date(item.timestamp).getTime() < latestTime);
+  return candidates.at(0) ?? null;
+}
+
+function minutesBetween(current, previous) {
+  if (!current || !previous) return null;
+  const diffMs = new Date(current.timestamp).getTime() - new Date(previous.timestamp).getTime();
+  if (!Number.isFinite(diffMs) || diffMs <= 0) return null;
+  return diffMs / 60_000;
+}
+
 export function getSignalLabels(item) {
   const thresholds = CONFIG.thresholds;
   const labels = [];
@@ -55,14 +68,19 @@ export function getSignalLabels(item) {
 export function scanSnapshotRecords(records, { lookbackMinutes = 60 } = {}) {
   const setups = [];
   const groups = groupByPair(records);
+  const allowPartialLookback = CONFIG.scanMode === "test";
 
   for (const group of groups.values()) {
     const latest = group.at(-1);
-    const previous = findPreviousSnapshot(group, latest, lookbackMinutes);
+    const fullLookbackPrevious = findPreviousSnapshot(group, latest, lookbackMinutes);
+    const previous = fullLookbackPrevious ?? (allowPartialLookback ? findAnyPreviousSnapshot(group, latest) : null);
+    const actualLookbackMinutes = minutesBetween(latest, previous);
 
     const candidate = {
       ...latest,
       lookbackMinutes,
+      actualLookbackMinutes,
+      isPartialLookback: Boolean(previous && !fullLookbackPrevious),
       priceChangePct: previous ? percentChange(latest.price, previous.price) : null,
       oiChangePct: previous ? percentChange(latest.openInterest, previous.openInterest) : null,
       volume24hChangePct: previous ? percentChange(latest.volume24h, previous.volume24h) : null,

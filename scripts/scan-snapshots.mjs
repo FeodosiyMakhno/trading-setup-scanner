@@ -21,9 +21,13 @@ if (records.length > 0 && setups.length === 0) {
 }
 
 for (const [index, setup] of setups.slice(0, 25).entries()) {
+  const windowLabel = setup.actualLookbackMinutes
+    ? `${Math.round(setup.actualLookbackMinutes)}m${setup.isPartialLookback ? "*" : ""}`
+    : "n/a";
   console.log(
     `${String(index + 1).padStart(2, " ")}. ${setup.exchangeSymbol.padEnd(14)} ` +
       `${setup.labels.join(", ").padEnd(18)} | ` +
+      `Window ${windowLabel.padStart(5)} | ` +
       `OI/MC ${setup.oiMc.toFixed(2).padStart(6)} | ` +
       `OI ${pct(setup.oiChangePct).padStart(8)} | ` +
       `Price ${pct(setup.priceChangePct).padStart(8)} | ` +

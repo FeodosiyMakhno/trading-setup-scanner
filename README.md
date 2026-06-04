@@ -82,6 +82,8 @@ Test mode uses softer thresholds so early reports are not empty while we tune th
 
 Current test mode includes `OI/MC watch` when OI/MC is at least `0.25`.
 
+If a full 60-minute lookback is not available yet, test mode uses the earliest available previous snapshot and marks the displayed window with `*`, for example `5m*`.
+
 ### Generate visual HTML report
 
 ```bash

@@ -68,6 +68,12 @@ function badge(label) {
   return `<span class="badge ${className}">${escapeHtml(label)}</span>`;
 }
 
+function windowLabel(row) {
+  if (!row.actualLookbackMinutes) return "n/a";
+  const rounded = Math.round(row.actualLookbackMinutes);
+  return `${rounded}m${row.isPartialLookback ? "*" : ""}`;
+}
+
 function renderHtml({ generatedAt, records, latestRows, setups }) {
   const rows = latestRows.slice(0, 50).map((row, index) => {
     const labels = getSignalLabels({
@@ -102,6 +108,7 @@ function renderHtml({ generatedAt, records, latestRows, setups }) {
       <td class="rank">${index + 1}</td>
       <td><strong>${escapeHtml(setup.exchangeSymbol)}</strong></td>
       <td>${setup.labels.map(badge).join("")}</td>
+      <td>${escapeHtml(windowLabel(setup))}</td>
       <td><strong>${Number(setup.oiMc ?? 0).toFixed(2)}</strong>${ratioBar(setup.oiMc, 1)}</td>
       <td class="${changeClass(setup.oiChangePct)}">${pct(setup.oiChangePct)}</td>
       <td class="${changeClass(setup.priceChangePct)}">${pct(setup.priceChangePct)}</td>
@@ -217,7 +224,7 @@ function renderHtml({ generatedAt, records, latestRows, setups }) {
       <table>
         <thead>
           <tr>
-            <th>#</th><th>Pair</th><th>Signal</th><th>OI/MC</th><th>OI Change</th><th>Price Change</th><th>MC</th><th>Funding</th>
+            <th>#</th><th>Pair</th><th>Signal</th><th>Window</th><th>OI/MC</th><th>OI Change</th><th>Price Change</th><th>MC</th><th>Funding</th>
           </tr>
         </thead>
         <tbody>${setupRows}</tbody>
