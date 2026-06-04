@@ -126,6 +126,14 @@ $env:COLLECT_GENERATE_REPORT="1"
 npm run collect:loop
 ```
 
+On this Windows setup, you can use the helper script:
+
+```powershell
+.\scripts\run-one-hour-test.ps1
+```
+
+It sets `SCAN_MODE=test`, enables report generation, and runs 12 collections with a 5-minute interval unless you override those environment variables first.
+
 For continuous mode:
 
 ```powershell
