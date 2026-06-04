@@ -140,6 +140,38 @@ npm run bot
 
 The bot uses inline buttons and edits the existing menu message on button clicks, so navigation does not spam the chat.
 
+### Paper hypothesis journal
+
+Use this when you want to check whether a scanner idea was actually useful later.
+
+Log the current report candidates:
+
+```bash
+npm run hypotheses:log
+```
+
+This writes local paper hypotheses to:
+
+```text
+data/setup-hypotheses.jsonl
+```
+
+It does not open real trades. It records `long-watch` for OI + price candidates and `neutral-watch` for OI/MC candidates.
+
+After collecting more snapshots, evaluate what happened:
+
+```bash
+npm run hypotheses:evaluate
+```
+
+This writes:
+
+```text
+reports/hypothesis-evaluation.json
+```
+
+The evaluation compares later snapshot prices against the logged price and reports max favorable move, max adverse move, and a simple verdict.
+
 ### Collect automatically
 
 ```bash
@@ -191,6 +223,8 @@ SCAN_MODE=strict
 SCAN_LOOKBACK_MINUTES=60
 SNAPSHOTS_FILE=data/market-snapshots.jsonl
 REPORT_JSON_FILE=reports/latest-report.json
+HYPOTHESES_FILE=data/setup-hypotheses.jsonl
+HYPOTHESES_EVALUATION_FILE=reports/hypothesis-evaluation.json
 COINGECKO_CACHE_FILE=data/coingecko-markets-cache.json
 COINGECKO_CACHE_TTL_MINUTES=60
 COLLECT_INTERVAL_MINUTES=5
@@ -211,6 +245,7 @@ npm run collect
 - `src/market`: candidate matching and OI/MC ranking.
 - `src/storage`: local JSONL snapshot storage.
 - `src/scanner`: setup rules.
+- `src/tracking`: paper hypothesis logging and later evaluation.
 - `src/telegram`: Telegram Bot API client and button-based report views.
 - `scripts`: runnable prototype commands.
 
