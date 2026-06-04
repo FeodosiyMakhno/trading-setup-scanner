@@ -1,5 +1,6 @@
 import { loadEnvFile } from "../src/runtime/env.mjs";
 import { TelegramApi } from "../src/telegram/api.mjs";
+import { rememberTelegramChat } from "../src/telegram/chats.mjs";
 import { readLatestReport } from "../src/telegram/report.mjs";
 import { ACTIONS, renderTelegramView } from "../src/telegram/views.mjs";
 
@@ -86,6 +87,7 @@ async function handleUpdate(update) {
 async function handleMessage(message) {
   const chatId = message.chat?.id;
   if (!chatId) return;
+  await rememberTelegramChat(message.chat);
 
   const view = await loadView(ACTIONS.main);
   await api.sendMessage({
@@ -104,6 +106,7 @@ async function handleCallbackQuery(query) {
   await api.answerCallbackQuery({ callback_query_id: query.id });
 
   if (!chatId || !messageId) return;
+  await rememberTelegramChat(message.chat);
 
   const view = await loadView(action);
   try {

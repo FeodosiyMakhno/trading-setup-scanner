@@ -14,6 +14,7 @@
     "scan:test": "node scripts/scan-snapshots.mjs --mode=test",
     "bot": "node scripts/telegram-bot.mjs",
     "bot:preview": "node scripts/telegram-preview.mjs",
+    "alerts:telegram": "node scripts/send-telegram-alerts.mjs",
     "hypotheses:log": "node scripts/log-hypotheses.mjs",
     "hypotheses:evaluate": "node scripts/evaluate-hypotheses.mjs"
   },

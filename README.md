@@ -140,6 +140,20 @@ npm run bot
 
 The bot uses inline buttons and edits the existing menu message on button clicks, so navigation does not spam the chat.
 
+To receive proactive alerts, first send `/start` to the bot. The bot stores the chat locally in:
+
+```text
+data/telegram-chats.jsonl
+```
+
+Then send alerts for new `Silent OI build` candidates from the latest report:
+
+```bash
+npm run alerts:telegram
+```
+
+Alerts are prompts for manual review, not commands to enter a trade.
+
 ### Paper hypothesis journal
 
 Use this when you want to check whether a scanner idea was actually useful later.
@@ -213,6 +227,17 @@ npm run collect:loop
 
 Use continuous mode only when you are ready to leave the process running.
 
+For automatic scanning with reports and Telegram alerts:
+
+```powershell
+$env:SCAN_MODE="test"
+$env:COLLECT_RUNS="0"
+$env:COLLECT_INTERVAL_MINUTES="5"
+$env:COLLECT_GENERATE_REPORT="1"
+$env:COLLECT_SEND_TELEGRAM_ALERTS="1"
+npm run collect:loop
+```
+
 ## Useful Environment Options
 
 ```bash
@@ -221,6 +246,8 @@ SCAN_VOLUME_24H_MIN=1000000
 SCAN_CANDIDATE_LIMIT=100
 SCAN_MODE=strict
 SCAN_LOOKBACK_MINUTES=60
+TELEGRAM_CHATS_FILE=data/telegram-chats.jsonl
+TELEGRAM_ALERTS_SENT_FILE=data/telegram-alerts-sent.jsonl
 SNAPSHOTS_FILE=data/market-snapshots.jsonl
 REPORT_JSON_FILE=reports/latest-report.json
 HYPOTHESES_FILE=data/setup-hypotheses.jsonl
@@ -230,6 +257,7 @@ COINGECKO_CACHE_TTL_MINUTES=60
 COLLECT_INTERVAL_MINUTES=5
 COLLECT_RUNS=12
 COLLECT_GENERATE_REPORT=0
+COLLECT_SEND_TELEGRAM_ALERTS=0
 ```
 
 On Windows PowerShell, set a variable like this before running a command:
