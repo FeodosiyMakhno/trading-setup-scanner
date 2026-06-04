@@ -3,6 +3,7 @@ node_modules/
 data/*.jsonl
 data/*cache*.json
 reports/*.html
+reports/*.json
 *.log
 coverage/
 dist/

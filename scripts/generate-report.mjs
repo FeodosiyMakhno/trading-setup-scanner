@@ -7,6 +7,7 @@ import { buildLatestChangeRows, getSignalLabels, scanSnapshotRecords } from "../
 import { readJsonLines } from "../src/storage/jsonl.mjs";
 
 const outputFile = resolve(process.env.REPORT_FILE ?? "reports/latest-report.html");
+const jsonOutputFile = resolve(process.env.REPORT_JSON_FILE ?? "reports/latest-report.json");
 const records = await readJsonLines(CONFIG.snapshotsFile);
 const latestByPair = latestRecordsByPair(records);
 const latestRows = [...latestByPair.values()].sort((a, b) => Number(b.oiMc ?? 0) - Number(a.oiMc ?? 0));
@@ -16,17 +17,23 @@ const setups = scanSnapshotRecords(records, {
 const changeRows = buildLatestChangeRows(records, {
   lookbackMinutes: CONFIG.scanLookbackMinutes,
 });
-
-await mkdir(dirname(outputFile), { recursive: true });
-await writeFile(outputFile, renderHtml({
+const reportModel = {
   generatedAt: new Date().toISOString(),
   records,
   latestRows,
   setups,
   changeRows,
-}), "utf8");
+};
+
+await mkdir(dirname(outputFile), { recursive: true });
+await mkdir(dirname(jsonOutputFile), { recursive: true });
+await Promise.all([
+  writeFile(outputFile, renderHtml(reportModel), "utf8"),
+  writeFile(jsonOutputFile, `${JSON.stringify(buildJsonReport(reportModel), null, 2)}\n`, "utf8"),
+]);
 
 console.log(`Report written: ${outputFile}`);
+console.log(`JSON report written: ${jsonOutputFile}`);
 console.log(`Latest pairs: ${latestRows.length}`);
 console.log(`Setup candidates: ${setups.length}`);
 
@@ -121,6 +128,46 @@ function renderChangeTable(rows, focusLabel) {
       </tbody>
     </table>
   `;
+}
+
+function digestRow(row) {
+  const explanation = row.labels?.length ? explainSetup(row) : null;
+
+  return {
+    pair: row.exchangeSymbol,
+    exchange: row.exchange,
+    name: row.name,
+    coingeckoId: row.coingeckoId,
+    timestamp: row.timestamp,
+    window: windowLabel(row),
+    labels: row.labels ?? [],
+    oiMc: row.oiMc,
+    openInterest: row.openInterest,
+    marketCap: row.marketCap,
+    volume24h: row.volume24h,
+    fundingRate: row.fundingRate,
+    price: row.price,
+    priceChangePct: row.priceChangePct,
+    oiChangePct: row.oiChangePct,
+    volume24hChangePct: row.volume24hChangePct,
+    reason: explanation?.reason ?? null,
+    nextCheck: explanation?.nextCheck ?? null,
+  };
+}
+
+function buildJsonReport({ generatedAt, records, latestRows, setups, changeRows }) {
+  return {
+    generatedAt,
+    mode: CONFIG.scanMode,
+    snapshotsFile: CONFIG.snapshotsFile,
+    lookbackMinutes: CONFIG.scanLookbackMinutes,
+    snapshotRows: records.length,
+    latestPairs: latestRows.length,
+    setupCandidates: setups.slice(0, 30).map(digestRow),
+    topOiMcCandidates: latestRows.slice(0, 50).map(digestRow),
+    topOiChange: sortedByAbsChange(changeRows, "oiChangePct").map(digestRow),
+    topPriceChange: sortedByAbsChange(changeRows, "priceChangePct").map(digestRow),
+  };
 }
 
 function renderHtml({ generatedAt, records, latestRows, setups, changeRows }) {
