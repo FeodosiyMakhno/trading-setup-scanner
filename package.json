@@ -11,7 +11,9 @@
     "report": "node scripts/generate-report.mjs",
     "report:test": "node scripts/generate-report.mjs --mode=test",
     "scan": "node scripts/scan-snapshots.mjs",
-    "scan:test": "node scripts/scan-snapshots.mjs --mode=test"
+    "scan:test": "node scripts/scan-snapshots.mjs --mode=test",
+    "bot": "node scripts/telegram-bot.mjs",
+    "bot:preview": "node scripts/telegram-preview.mjs"
   },
   "engines": {
     "node": ">=20"

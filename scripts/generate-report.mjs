@@ -131,7 +131,8 @@ function renderChangeTable(rows, focusLabel) {
 }
 
 function digestRow(row) {
-  const explanation = row.labels?.length ? explainSetup(row) : null;
+  const labels = row.labels ?? getSignalLabels(row);
+  const explanation = labels.length ? explainSetup({ ...row, labels }) : null;
 
   return {
     pair: row.exchangeSymbol,
@@ -140,7 +141,7 @@ function digestRow(row) {
     coingeckoId: row.coingeckoId,
     timestamp: row.timestamp,
     window: windowLabel(row),
-    labels: row.labels ?? [],
+    labels,
     oiMc: row.oiMc,
     openInterest: row.openInterest,
     marketCap: row.marketCap,

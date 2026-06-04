@@ -104,6 +104,42 @@ For softer test-mode report:
 npm run report:test
 ```
 
+The report command also creates a structured JSON file for the Telegram bot:
+
+```text
+reports/latest-report.json
+```
+
+### Telegram bot prototype
+
+The bot reads `reports/latest-report.json` and shows a button-based menu:
+
+- setup candidates;
+- top OI change;
+- top price change;
+- top OI/MC candidates;
+- individual coin details with reason and next manual check.
+
+Preview the Telegram messages without a bot token:
+
+```bash
+npm run bot:preview
+```
+
+For the real bot, create `.env` from `.env.example` and set:
+
+```bash
+TELEGRAM_BOT_TOKEN=123456:your_bot_token
+```
+
+Then run:
+
+```bash
+npm run bot
+```
+
+The bot uses inline buttons and edits the existing menu message on button clicks, so navigation does not spam the chat.
+
 ### Collect automatically
 
 ```bash
@@ -154,6 +190,7 @@ SCAN_CANDIDATE_LIMIT=100
 SCAN_MODE=strict
 SCAN_LOOKBACK_MINUTES=60
 SNAPSHOTS_FILE=data/market-snapshots.jsonl
+REPORT_JSON_FILE=reports/latest-report.json
 COINGECKO_CACHE_FILE=data/coingecko-markets-cache.json
 COINGECKO_CACHE_TTL_MINUTES=60
 COLLECT_INTERVAL_MINUTES=5
@@ -174,6 +211,7 @@ npm run collect
 - `src/market`: candidate matching and OI/MC ranking.
 - `src/storage`: local JSONL snapshot storage.
 - `src/scanner`: setup rules.
+- `src/telegram`: Telegram Bot API client and button-based report views.
 - `scripts`: runnable prototype commands.
 
 ## Planned Next Steps
