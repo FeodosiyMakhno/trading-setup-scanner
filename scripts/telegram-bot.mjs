@@ -1,6 +1,7 @@
 import { loadEnvFile } from "../src/runtime/env.mjs";
 import { TelegramApi } from "../src/telegram/api.mjs";
 import { rememberTelegramChat } from "../src/telegram/chats.mjs";
+import { readLatestEvaluation } from "../src/telegram/evaluation.mjs";
 import { readLatestReport } from "../src/telegram/report.mjs";
 import { ACTIONS, renderTelegramView } from "../src/telegram/views.mjs";
 
@@ -54,7 +55,10 @@ function sleep(ms) {
 async function loadView(action = ACTIONS.main) {
   try {
     const report = await readLatestReport();
-    return renderTelegramView(report, action);
+    const evaluation = action === ACTIONS.stats
+      ? await readLatestEvaluation().catch(() => null)
+      : null;
+    return renderTelegramView(report, action, { evaluation });
   } catch (error) {
     return {
       text: [

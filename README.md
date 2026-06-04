@@ -118,6 +118,7 @@ The bot reads `reports/latest-report.json` and shows a button-based menu:
 - top OI change;
 - top price change;
 - top OI/MC candidates;
+- paper hypothesis statistics;
 - individual coin details with reason and next manual check.
 
 Preview the Telegram messages without a bot token:
@@ -235,6 +236,7 @@ $env:COLLECT_RUNS="0"
 $env:COLLECT_INTERVAL_MINUTES="5"
 $env:COLLECT_GENERATE_REPORT="1"
 $env:COLLECT_LOG_HYPOTHESES="1"
+$env:COLLECT_EVALUATE_HYPOTHESES="1"
 $env:COLLECT_SEND_TELEGRAM_ALERTS="1"
 npm run collect:loop
 ```
@@ -259,6 +261,7 @@ COLLECT_INTERVAL_MINUTES=5
 COLLECT_RUNS=12
 COLLECT_GENERATE_REPORT=0
 COLLECT_LOG_HYPOTHESES=0
+COLLECT_EVALUATE_HYPOTHESES=0
 COLLECT_SEND_TELEGRAM_ALERTS=0
 ```
 

@@ -11,6 +11,9 @@ const shouldSendTelegramAlerts = ["1", "true", "yes"].includes(
 const shouldLogHypotheses = ["1", "true", "yes"].includes(
   String(process.env.COLLECT_LOG_HYPOTHESES ?? "0").toLowerCase(),
 );
+const shouldEvaluateHypotheses = ["1", "true", "yes"].includes(
+  String(process.env.COLLECT_EVALUATE_HYPOTHESES ?? "0").toLowerCase(),
+);
 
 if (!Number.isFinite(intervalMinutes) || intervalMinutes < 0) {
   throw new Error("COLLECT_INTERVAL_MINUTES must be a non-negative number.");
@@ -51,6 +54,7 @@ console.log(`Runs: ${maxRuns === 0 ? "infinite" : maxRuns}`);
 console.log(`Mode: ${process.env.SCAN_MODE ?? "strict"}`);
 console.log(`Generate report: ${shouldGenerateReport ? "yes" : "no"}`);
 console.log(`Log hypotheses: ${shouldLogHypotheses ? "yes" : "no"}`);
+console.log(`Evaluate hypotheses: ${shouldEvaluateHypotheses ? "yes" : "no"}`);
 console.log(`Send Telegram alerts: ${shouldSendTelegramAlerts ? "yes" : "no"}`);
 console.log("");
 
@@ -72,6 +76,12 @@ while (maxRuns === 0 || runNumber < maxRuns) {
   if (shouldLogHypotheses) {
     console.log("=== Hypothesis log after collection ===");
     await runNodeScript("scripts/log-hypotheses.mjs");
+    console.log("");
+  }
+
+  if (shouldEvaluateHypotheses) {
+    console.log("=== Hypothesis evaluation after collection ===");
+    await runNodeScript("scripts/evaluate-hypotheses.mjs");
     console.log("");
   }
 

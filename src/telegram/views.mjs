@@ -8,6 +8,7 @@ export const ACTIONS = {
   oiChange: "oi_change",
   priceChange: "price_change",
   oiMc: "oi_mc",
+  stats: "stats",
   refresh: "refresh",
 };
 
@@ -65,6 +66,7 @@ function mainKeyboard() {
   return keyboard([
     [button("Сетапы", ACTIONS.setups), button("OI change", ACTIONS.oiChange)],
     [button("Price change", ACTIONS.priceChange), button("OI/MC", ACTIONS.oiMc)],
+    [button("Статистика прогнозов", ACTIONS.stats)],
     [button("Обновить", ACTIONS.refresh)],
   ]);
 }
@@ -149,7 +151,86 @@ export function renderDetails(report, key, index, backAction = ACTIONS.main) {
   };
 }
 
-export function renderTelegramView(report, action = ACTIONS.main) {
+function verdictLabel(verdict) {
+  const labels = {
+    direction_worked: "сработало",
+    developing_positive: "пока плюс",
+    developing_negative: "пока минус",
+    direction_failed: "не сработало",
+    quiet_watch: "тихо",
+    movement_detected: "движение было",
+    too_early: "рано",
+    waiting_for_future_snapshots: "ждет данных",
+    pending: "ждет",
+    unclear: "неясно",
+  };
+
+  return labels[verdict] ?? verdict;
+}
+
+function formatEvaluationRow(item, index) {
+  return [
+    `${index + 1}. ${item.pair}`,
+    item.bias,
+    verdictLabel(item.verdict),
+    `latest ${pct(item.latestMovePct)}`,
+    `max ${pct(item.maxUpPct)}/${pct(item.maxDownPct)}`,
+  ].join(" | ");
+}
+
+export function renderStats(evaluation) {
+  if (!evaluation) {
+    return {
+      text: [
+        "Статистика прогнозов",
+        "",
+        "Оценка пока недоступна. Нужно запустить:",
+        "npm run hypotheses:evaluate",
+      ].join("\n"),
+      reply_markup: backKeyboard(),
+    };
+  }
+
+  const items = evaluation.evaluations ?? [];
+  const ready = items.filter((item) => item.status === "ready");
+  const positive = ready.filter((item) => ["direction_worked", "developing_positive"].includes(item.verdict));
+  const negative = ready.filter((item) => ["direction_failed", "developing_negative"].includes(item.verdict));
+  const quiet = ready.filter((item) => ["quiet_watch", "movement_detected", "unclear"].includes(item.verdict));
+  const best = ready
+    .filter((item) => isFiniteNumber(item.latestMovePct))
+    .toSorted((a, b) => Number(b.latestMovePct) - Number(a.latestMovePct))
+    .slice(0, 5);
+  const worst = ready
+    .filter((item) => isFiniteNumber(item.latestMovePct))
+    .toSorted((a, b) => Number(a.latestMovePct) - Number(b.latestMovePct))
+    .slice(0, 5);
+
+  return {
+    text: [
+      "Статистика прогнозов",
+      "",
+      `Всего гипотез: ${evaluation.hypotheses ?? items.length}`,
+      `Можно оценивать: ${ready.length}`,
+      `Пока рано: ${items.filter((item) => item.status === "early").length}`,
+      `Ждет данных: ${items.filter((item) => item.status === "pending").length}`,
+      "",
+      `Плюс: ${positive.length}`,
+      `Минус: ${negative.length}`,
+      `Наблюдение/тихо: ${quiet.length}`,
+      "",
+      "Лучшие сейчас:",
+      best.length ? best.map(formatEvaluationRow).join("\n") : "нет",
+      "",
+      "Худшие сейчас:",
+      worst.length ? worst.map(formatEvaluationRow).join("\n") : "нет",
+      "",
+      `Обновлено: ${generatedAtLabel(evaluation.generatedAt)}`,
+    ].join("\n"),
+    reply_markup: backKeyboard(),
+  };
+}
+
+export function renderTelegramView(report, action = ACTIONS.main, { evaluation } = {}) {
   if (action === ACTIONS.refresh || action === ACTIONS.main) {
     return renderMain(report);
   }
@@ -168,6 +249,10 @@ export function renderTelegramView(report, action = ACTIONS.main) {
 
   if (action === ACTIONS.oiMc) {
     return renderList(report, "topOiMcCandidates", "Top OI/MC", "oimc");
+  }
+
+  if (action === ACTIONS.stats) {
+    return renderStats(evaluation);
   }
 
   const [prefix, rawIndex] = action.split(":");
