@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { CONFIG } from "../src/config.mjs";
 import { pct, usd } from "../src/format.mjs";
-import { getSignalLabels, scanSnapshotRecords } from "../src/scanner/rules.mjs";
+import { buildLatestChangeRows, getSignalLabels, scanSnapshotRecords } from "../src/scanner/rules.mjs";
 import { readJsonLines } from "../src/storage/jsonl.mjs";
 
 const outputFile = resolve(process.env.REPORT_FILE ?? "reports/latest-report.html");
@@ -12,6 +12,9 @@ const latestRows = [...latestByPair.values()].sort((a, b) => Number(b.oiMc ?? 0)
 const setups = scanSnapshotRecords(records, {
   lookbackMinutes: CONFIG.scanLookbackMinutes,
 });
+const changeRows = buildLatestChangeRows(records, {
+  lookbackMinutes: CONFIG.scanLookbackMinutes,
+});
 
 await mkdir(dirname(outputFile), { recursive: true });
 await writeFile(outputFile, renderHtml({
@@ -19,6 +22,7 @@ await writeFile(outputFile, renderHtml({
   records,
   latestRows,
   setups,
+  changeRows,
 }), "utf8");
 
 console.log(`Report written: ${outputFile}`);
@@ -74,7 +78,54 @@ function windowLabel(row) {
   return `${rounded}m${row.isPartialLookback ? "*" : ""}`;
 }
 
-function renderHtml({ generatedAt, records, latestRows, setups }) {
+function isFiniteNumber(value) {
+  return Number.isFinite(Number(value));
+}
+
+function sortedByAbsChange(rows, key, limit = 30) {
+  return rows
+    .filter((row) => isFiniteNumber(row[key]))
+    .toSorted((a, b) => Math.abs(Number(b[key])) - Math.abs(Number(a[key])))
+    .slice(0, limit);
+}
+
+function renderChangeTable(rows, focusLabel) {
+  if (!rows.length) {
+    return `<div class="empty">Not enough snapshot history yet. Collect more data and generate the report again.</div>`;
+  }
+
+  return `
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Pair</th><th>Window</th><th>Focus</th><th>OI</th><th>Price</th><th>OI/MC</th><th>OI Value</th><th>MC</th><th>Funding</th><th>Signal</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map((row, index) => `
+          <tr>
+            <td class="rank">${index + 1}</td>
+            <td><strong>${escapeHtml(row.exchangeSymbol)}</strong></td>
+            <td>${escapeHtml(windowLabel(row))}</td>
+            <td>${escapeHtml(focusLabel)}</td>
+            <td class="${changeClass(row.oiChangePct)}">${pct(row.oiChangePct)}</td>
+            <td class="${changeClass(row.priceChangePct)}">${pct(row.priceChangePct)}</td>
+            <td><strong>${Number(row.oiMc ?? 0).toFixed(2)}</strong>${ratioBar(row.oiMc, 1)}</td>
+            <td>${usd(row.openInterest)}</td>
+            <td>${usd(row.marketCap)}</td>
+            <td class="${changeClass(row.fundingRate)}">${pct(row.fundingRate)}</td>
+            <td>${row.labels.map(badge).join("") || '<span class="muted">none</span>'}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderHtml({ generatedAt, records, latestRows, setups, changeRows }) {
+  const topOiChangeRows = sortedByAbsChange(changeRows, "oiChangePct");
+  const topPriceChangeRows = sortedByAbsChange(changeRows, "priceChangePct");
+
   const rows = latestRows.slice(0, 50).map((row, index) => {
     const labels = getSignalLabels({
       ...row,
@@ -240,6 +291,12 @@ function renderHtml({ generatedAt, records, latestRows, setups }) {
       </thead>
       <tbody>${rows}</tbody>
     </table>
+
+    <h2>Top OI Change</h2>
+    ${renderChangeTable(topOiChangeRows, "OI")}
+
+    <h2>Top Price Change</h2>
+    ${renderChangeTable(topPriceChangeRows, "Price")}
   </main>
 </body>
 </html>`;

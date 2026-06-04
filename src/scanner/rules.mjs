@@ -65,8 +65,8 @@ export function getSignalLabels(item) {
   return labels;
 }
 
-export function scanSnapshotRecords(records, { lookbackMinutes = 60 } = {}) {
-  const setups = [];
+export function buildLatestChangeRows(records, { lookbackMinutes = 60 } = {}) {
+  const rows = [];
   const groups = groupByPair(records);
   const allowPartialLookback = CONFIG.scanMode === "test";
 
@@ -86,7 +86,16 @@ export function scanSnapshotRecords(records, { lookbackMinutes = 60 } = {}) {
       volume24hChangePct: previous ? percentChange(latest.volume24h, previous.volume24h) : null,
     };
     candidate.labels = getSignalLabels(candidate);
+    rows.push(candidate);
+  }
 
+  return rows;
+}
+
+export function scanSnapshotRecords(records, { lookbackMinutes = 60 } = {}) {
+  const setups = [];
+
+  for (const candidate of buildLatestChangeRows(records, { lookbackMinutes })) {
     if (candidate.labels.length > 0) {
       setups.push(candidate);
     }
