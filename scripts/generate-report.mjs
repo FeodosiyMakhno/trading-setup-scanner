@@ -2,6 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { CONFIG } from "../src/config.mjs";
 import { pct, usd } from "../src/format.mjs";
+import { explainSetup } from "../src/scanner/explain.mjs";
 import { buildLatestChangeRows, getSignalLabels, scanSnapshotRecords } from "../src/scanner/rules.mjs";
 import { readJsonLines } from "../src/storage/jsonl.mjs";
 
@@ -154,19 +155,25 @@ function renderHtml({ generatedAt, records, latestRows, setups, changeRows }) {
     `;
   }).join("");
 
-  const setupRows = setups.slice(0, 30).map((setup, index) => `
-    <tr>
-      <td class="rank">${index + 1}</td>
-      <td><strong>${escapeHtml(setup.exchangeSymbol)}</strong></td>
-      <td>${setup.labels.map(badge).join("")}</td>
-      <td>${escapeHtml(windowLabel(setup))}</td>
-      <td><strong>${Number(setup.oiMc ?? 0).toFixed(2)}</strong>${ratioBar(setup.oiMc, 1)}</td>
-      <td class="${changeClass(setup.oiChangePct)}">${pct(setup.oiChangePct)}</td>
-      <td class="${changeClass(setup.priceChangePct)}">${pct(setup.priceChangePct)}</td>
-      <td>${usd(setup.marketCap)}</td>
-      <td class="${changeClass(setup.fundingRate)}">${pct(setup.fundingRate)}</td>
-    </tr>
-  `).join("");
+  const setupRows = setups.slice(0, 30).map((setup, index) => {
+    const explanation = explainSetup(setup);
+
+    return `
+      <tr>
+        <td class="rank">${index + 1}</td>
+        <td><strong>${escapeHtml(setup.exchangeSymbol)}</strong></td>
+        <td>${setup.labels.map(badge).join("")}</td>
+        <td>${escapeHtml(windowLabel(setup))}</td>
+        <td><strong>${Number(setup.oiMc ?? 0).toFixed(2)}</strong>${ratioBar(setup.oiMc, 1)}</td>
+        <td class="${changeClass(setup.oiChangePct)}">${pct(setup.oiChangePct)}</td>
+        <td class="${changeClass(setup.priceChangePct)}">${pct(setup.priceChangePct)}</td>
+        <td>${usd(setup.marketCap)}</td>
+        <td class="${changeClass(setup.fundingRate)}">${pct(setup.fundingRate)}</td>
+        <td class="note">${escapeHtml(explanation.reason)}</td>
+        <td class="note">${escapeHtml(explanation.nextCheck)}</td>
+      </tr>
+    `;
+  }).join("");
 
   return `<!doctype html>
 <html lang="en">
@@ -221,6 +228,7 @@ function renderHtml({ generatedAt, records, latestRows, setups, changeRows }) {
     th { color: var(--muted); font-size: 12px; font-weight: 600; background: #14171a; }
     tr:last-child td { border-bottom: 0; }
     .rank { color: var(--muted); width: 44px; text-align: right; }
+    .note { min-width: 220px; max-width: 320px; color: #d8dee5; font-size: 13px; }
     .positive { color: var(--green); }
     .negative { color: var(--red); }
     .bar { height: 5px; width: 92px; background: #282d33; border-radius: 99px; margin-top: 5px; overflow: hidden; }
@@ -275,7 +283,7 @@ function renderHtml({ generatedAt, records, latestRows, setups, changeRows }) {
       <table>
         <thead>
           <tr>
-            <th>#</th><th>Pair</th><th>Signal</th><th>Window</th><th>OI/MC</th><th>OI Change</th><th>Price Change</th><th>MC</th><th>Funding</th>
+            <th>#</th><th>Pair</th><th>Signal</th><th>Window</th><th>OI/MC</th><th>OI Change</th><th>Price Change</th><th>MC</th><th>Funding</th><th>Reason</th><th>Next Check</th>
           </tr>
         </thead>
         <tbody>${setupRows}</tbody>
